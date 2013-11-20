@@ -36,3 +36,10 @@ If it reaches the end of your timeline it can either stop or start again after a
 You can choose to keep tweets of a certain age, with certain tags and whether they've been retweeted or favourited by others.
 
 See `tw.js` for fuller documentation of these options.
+
+## Limitations
+
+The Twitter API will only provide access to your [last 3,200](https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline) tweets (16 'pages'). 
+
+However, if you've downloaded a complete Tweet archive from [your Twitter settings](https://twitter.com/settings/account) you can use this as an alternative data source using the `archive` option. 
+This comes with its own limitations as favourites and retweet counts are not present in the data and are not pulled separately from the API.
