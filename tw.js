@@ -26,8 +26,8 @@ var conf = {
     // seconds to wait before running again after last tweet is reached. defaults to 0 which quits instead
     idleTime: 0,
     
-    // initial max_id to use in paging, used for debugging only
-    startId: 306793058509393920
+    // initial max_id to use in paging, used for debugging.
+    startId: null
 };
 
 
