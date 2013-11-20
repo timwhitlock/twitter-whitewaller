@@ -252,7 +252,7 @@ function nextPage( callback ){
     }
     // else get page of tweets via API  
     var params = { 
-        count: 2, 
+        count: 200, 
         user_id : userId, 
         trim_user: true,
         include_rts: false
