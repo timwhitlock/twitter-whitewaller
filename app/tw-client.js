@@ -15,6 +15,7 @@ var conf = {
         ownFavs: true,
         minFavs: 1,
         hashTags: [ 'bookmarked' ],
+        idleTime: 0,
         archive: ''
     },
     dbPath = __dirname+'/tw-conf.json',
