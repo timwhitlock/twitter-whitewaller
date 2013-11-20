@@ -2,17 +2,24 @@
 
 Trashes tweets in bulk with options to keep the important ones.
 
-Runs under Node JS.
+## Requirements
+
+Currently only for Node JS.
+
+You'll need *node*, *npm* and *git*. You'll also need to [register a Twitter app](https://dev.twitter.com/apps/new).
 
 
-## Install
+## Install via Git
 
-Install via npm and initialize your OAuth credentials as follows:
+Install dependencies and initialize your OAuth credentials as follows:
 
-    $ npm install twitter-whitewaller
+    $ git clone https://github.com/timwhitlock/twitter-whitewaller.git
+    $ cd twitter-whitewaller
+    $ npm install
     $ node tw.js init
-
-
+    
+Your OAuth crendentials are saved to a file at `app/tw-conf.json`. You may want to remove this between uses for securuty reasons.
+    
 ## Usage
 
 Edit (or copy and edit) `tw.js` and simply run it:
@@ -20,7 +27,7 @@ Edit (or copy and edit) `tw.js` and simply run it:
 `$ node tw.js`
 
 When running, it pages backwards through your Twitter timeline. When you hit an API rate limit, 
-just leave it to wait and it will carry on when it can. If it quits the paging will start again. 
+just leave it to wait and it will carry on when it can. If it quits, the paging will start again. 
 If it reaches the end of your timeline it can either stop or start again after a delay.
 
 
