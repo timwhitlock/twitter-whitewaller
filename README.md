@@ -1,7 +1,6 @@
 # Twitter Whitewaller
 
-Trashes your old tweets, but provides various options to keep tweets matching certain criteria. 
-
+Trashes tweets in bulk with options to keep the important ones.
 
 ## Install
 
