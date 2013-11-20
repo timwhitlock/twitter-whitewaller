@@ -11,6 +11,7 @@ var fs = require('fs'),
 var conf = {
         maxAge: 2592000,
         minRTs: 1,
+        replies: false,
         ownFavs: true,
         minFavs: 1,
         hashTags: [ 'bookmarked' ],
@@ -230,7 +231,7 @@ function nextPage( callback ){
         if( maxId ){
             var tweet = tweets.shift();
             if( ! tweet || tweet.id_str !== maxId ){
-                console.error('Expecting first tweet to match max_id '+maxId+', got '+(tweet?tweet.id_str:'none') );
+                // console.error('Expecting first tweet to match max_id '+maxId+', got '+(tweet?tweet.id_str:'none') );
                 // not sure why this happens, but possibly due to tweeting while running.
                 // process.exit( EXIT_TWFAIL );
                 tweet && tweets.unshift(tweet);
@@ -287,6 +288,8 @@ function run(){
     // run all tests on tweet
     function checkTweet(){
         maxId = tweet.id_str;
+        console.log('');
+        console.log('['+tweet.created_at+'] "'+tweet.text+'"');
         checkAge();
     }
     // skip if new enough to keep
@@ -296,11 +299,19 @@ function run(){
             console.log('Keeping tweet '+Math.floor(age/86400000)+' days old');
             return nextTweet();
         }        
+        checkReply();
+    }
+    // skip if replying to another user
+    function checkReply(){
+        if( conf.replies && tweet.in_reply_to_status_id ){
+            console.log('Keeping tweet in reply to @'+tweet.in_reply_to_screen_name);
+            return nextTweet();
+        }
         checkRTs();
     }
     // skip if enough retweets to keep
     function checkRTs(){
-        if( conf.minRTs && conf.minRTs <= tweet.retweet_count ){
+        if( conf.minRTs && tweet.retweeted && conf.minRTs <= tweet.retweet_count ){
             console.log('Keeping tweet retweeted '+tweet.retweet_count+' times');
             return nextTweet();
         }
@@ -308,13 +319,13 @@ function run(){
     }
     // skip if enough favourites to keep it
     function checkNumFavs(){
-        if( conf.minFavs && conf.minFavs <= tweet.favorite_count ){
+        if( conf.minFavs && tweet.favorited && conf.minFavs <= tweet.favorite_count ){
             console.log('Keeping tweet favourited '+tweet.favorite_count+' times');
             return nextTweet();
         }
         checkTags();
     } 
-    // check if tweet us tagged by a term meaning we keep it
+    // check if tweet is tagged by a term meaning we keep it
     function checkTags(){
         var keep = false,
             tags = tweet.entities && tweet.entities.hashtags;
@@ -334,8 +345,8 @@ function run(){
     }
     // check if favourited by self
     function checkOwnFavs(){
-        if( ! conf.ownFavs || ! tweet.favorite_count ){
-            return nextTweet();
+        if( ! conf.ownFavs || ! tweet.favorited ){
+            return checkFinal();
         }
         checkOwnFavourite( tweet.id_str, function( favourited ){
             if( favourited ){
@@ -383,6 +394,11 @@ exports.run = function( userConf ){
         if( typeof value === typeof conf[key] ){
             conf[key] = value;
         }
+    }
+    
+    // debug / override options
+    if( userConf.startId ){
+        maxId = userConf.startId;
     }
 
     // load existing conf and run
