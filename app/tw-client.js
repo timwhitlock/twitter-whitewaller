@@ -316,7 +316,8 @@ function run(){
     } 
     // check if tweet us tagged by a term meaning we keep it
     function checkTags(){
-        var tags = tweet.entities && tweet.entities.hashtags;
+        var keep = false,
+            tags = tweet.entities && tweet.entities.hashtags;
         if( tags && tags.length && conf.hashTags && conf.hashTags.length ){
             var terms = [];
             tags.forEach( function( tag ){
@@ -325,11 +326,11 @@ function run(){
             conf.hashTags.forEach( function( term, i ){
                 if( -1 !== terms.indexOf(term) ){
                     console.log('Keeping tweet tagged #'+term);
-                    return nextTweet();
+                    keep = true;
                 }
             } );
         }
-        checkOwnFavs();
+        keep ? nextTweet() : checkOwnFavs();
     }
     // check if favourited by self
     function checkOwnFavs(){
