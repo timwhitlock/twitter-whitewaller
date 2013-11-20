@@ -15,10 +15,11 @@ var conf = {
         ownFavs: true,
         minFavs: 1,
         hashTags: [ 'bookmarked' ],
-        idleTime: 0
+        archive: ''
     },
     dbPath = __dirname+'/tw-conf.json',
     client = require('twitter-api').createClient(),
+    archive,
     userId,
     maxId;
 
@@ -61,24 +62,39 @@ function lpad( str, chr, len ){
  * Common point to handle any errors from Twitter API calls
  */
 function handleTwitterError( status, error, resume ){
+    var ms;
     switch( status ){
-    case 200:
-        resume && resume();
-        break;
     case 401: 
-        console.error('OAuth invalid or expired. Run again with: $ node tw.js init');
+        console.error('Run again with: $ node tw.js init');
         process.exit( EXIT_AUTHFAIL );
+    case 502:
+    case 503:
+        // probably temporary errors
+        if( resume ){
+            ms = 5000;
+        }
+        break;
     case 429:
         // handle rate limiting if resume function passed
         if( resume ){
             var dt = client.getRateLimitReset(),
                 ms = 2000 + Math.max( 0, dt.getTime() - Date.now() ),
                 ft = lpad( String(dt.getHours()), '0', 2) +':'+ lpad( String(dt.getMinutes()), '0', 2 );
-            console.log('Waiting '+Math.round(ms/1000)+' seconds, will try again at '+ft+' ...');
-            setTimeout( resume, ms );
-            break;
+            console.log('Will try again at '+ft);
         }
-    default:
+        break;
+    }
+    if( resume ){
+        if( ms ){
+            console.log('Resuming in '+Math.ceil(ms/1000)+' seconds');
+            setTimeout( resume, ms );       
+        }
+        else {
+            console.log('Resuming immediately');
+            resume();
+        }
+    }
+    else {
         console.error('Exiting on status '+status+': error #'+error.code+', '+error.message);
         process.exit( EXIT_TWFAIL );
     }
@@ -215,6 +231,26 @@ function checkOwnFavourite( status_id, callback ){
  * Get next page of tweets, going backwards through time
  */
 function nextPage( callback ){
+    // Get tweets from local archive if configured
+    if( conf.archive ){
+        if( ! archive ){
+            archive = fs.readdirSync( conf.archive );
+        }
+        var filename = archive.pop();
+        if( ! filename ){
+            console.log('No more tweets in archive, quitting');
+            process.exit(0);
+        }
+        // load these tweets via a GLOBAL hack
+        Grailbird = { data: {} };
+        require( conf.archive+'/'+filename );
+        var key;
+        for( key in Grailbird.data ){
+            callback( Grailbird.data[key] );
+        }
+        return;
+    }
+    // else get page of tweets via API  
     var params = { 
         count: 2, 
         user_id : userId, 
@@ -239,7 +275,7 @@ function nextPage( callback ){
         }
         if( ! tweets.length ){
             if( ! conf.idleTime ){
-                console.log('No more tweets, quitting');
+                console.log('No more tweets in API, quitting');
                 process.exit(0);
             }
             console.log('No more tweets, running again in '+conf.idleTime+' seconds..');
@@ -259,11 +295,13 @@ function nextPage( callback ){
 function destroyTweet( status_id, callback ){
     console.log('Deleting '+status_id+' ..');
     client.post( 'statuses/destroy/'+status_id, { trim_user: true }, function( tweet, error, status ){
-        if( ! tweet || tweet.id_str !== status_id || error ){
+        if( 200 === status ){
+            console.log('Deleted');
+        }
+        else if( 404 !== status ){
             var resume = function(){ destroyTweet( status_id, callback ); };
             return handleTwitterError( status, error, resume );
         }
-        console.log('Deleted');
         callback();
     } );
 }
@@ -274,16 +312,14 @@ function destroyTweet( status_id, callback ){
  * Run whitewalling process with Twitter client now authenticated
  */
 function run(){
-    // get next batch and process if results
-    function nextBatch(){
-        nextPage( function( list ){
-            tweets = list;
-            nextTweet();
-        } );
-    }
-    // process next available tweet or get next batch
+    // process next available tweet or run again
     function nextTweet(){
-        ( tweet = tweets.shift() ) ? checkTweet() : nextBatch();
+        if( tweet = tweets.shift() ){
+            checkTweet();
+        }
+        else {
+            setTimeout( run, 100 );
+        }
     }
     // run all tests on tweet
     function checkTweet(){
@@ -361,11 +397,15 @@ function run(){
         destroyTweet( tweet.id_str, nextTweet ); 
     }
     var tweet, 
-        tweets,
+        tweets = [],
         now = Date.now(), 
         maxAge = 1000 * conf.maxAge;
-    // page through tweets and run async chain of tests        
-    nextBatch();
+    // get next batch and process if results
+    nextPage( function( list ){
+        console.log('Processing '+list.length+' tweets');
+        tweets = list;
+        nextTweet();
+    } );
 }
 
 

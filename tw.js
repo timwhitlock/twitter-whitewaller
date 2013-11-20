@@ -27,7 +27,11 @@ var conf = {
     idleTime: 0,
     
     // initial max_id to use in paging, used for debugging.
-    startId: null
+    startId: null,
+    
+    // path to official Twitter archive data directory. Defaults to using API.
+    archive: ''
+
 };
 
 
