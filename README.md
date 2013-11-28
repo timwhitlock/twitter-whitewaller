@@ -18,7 +18,7 @@ Install dependencies and initialize your OAuth credentials as follows:
     $ npm install
     $ node tw.js init
     
-Your OAuth crendentials are saved to a file at `app/tw-conf.json`. You may want to remove this between uses for security reasons.
+Your OAuth credentials are saved to a file at `app/tw-conf.json`. You may want to remove this between uses for security reasons.
     
 ## Usage
 
