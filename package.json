@@ -22,7 +22,7 @@
     "node": ">=0.6.0"
   },
   "dependencies" : { 
-    "twitter-api" : ">=1.0.4"
+    "twitter-api" : ">=1.0.6"
   },
   "readmeFilename" : "README.md",
   "bugs": {
