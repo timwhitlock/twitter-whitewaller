@@ -1,3 +1,9 @@
+# NO LONGER MAINTAINED
+
+If you want it, fork it. Just don't ask me to fix it.
+
+---
+
 # Twitter Whitewaller
 
 Trashes tweets in bulk with options to keep the important ones.
